@@ -1,16 +1,70 @@
-// import { HeroContent } from './components/HeroContent';
-// import { HeroVisual } from './components/HeroVisual';
+import { HeroContent } from './components/HeroContent';
+import { HeroVisual } from './components/HeroVisual';
+import { HeroBackground } from './components/HeroBackground';
+import { Header } from '../../components/layout/Header';
+import { MenuOverlay } from '../../components/layout/MenuOverlay';
+import { useMotionValue } from 'framer-motion';
+import { useEffect, useState } from 'react';
 
 export function Hero() {
-    return (
-        <section className="hero-section" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center' }}>
-            {/* Left Content */}
-            {/* <HeroContent /> */}
-            <div className="hero-content">Hero Content</div>
+    // Hoisted mouse tracking state
+    const mouseX = useMotionValue(0);
+    const mouseY = useMotionValue(0);
 
-            {/* Right Visual */}
-            {/* <HeroVisual /> */}
-            <div className="hero-visual">Hero Visual</div>
+    // Menu State
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            const { innerWidth, innerHeight } = window;
+            const x = (e.clientX - innerWidth / 2) / (innerWidth / 2);
+            const y = (e.clientY - innerHeight / 2) / (innerHeight / 2);
+
+            mouseX.set(x);
+            mouseY.set(y);
+        };
+
+        window.addEventListener('mousemove', handleMouseMove);
+        return () => window.removeEventListener('mousemove', handleMouseMove);
+    }, [mouseX, mouseY]);
+
+    return (
+        <section className="hero-section" style={{
+            position: 'relative',
+            height: '100vh',
+            width: '100%',
+            overflow: 'hidden',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: '#ffffff' // Ensure white background
+        }}>
+            <HeroBackground mouseX={mouseX} mouseY={mouseY} />
+            <MenuOverlay isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
+
+            {/* BackgroundField removed in favor of interactive HeroBackground */}
+            <Header onMenuClick={() => setIsMenuOpen(true)} />
+
+            <div className="hero-grid" style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                width: '100%',
+                maxWidth: '1400px', // Container max-width
+                height: '100%',
+                padding: '0 var(--padding-x)',
+                position: 'relative',
+                zIndex: 10
+            }}>
+                {/* Left Content */}
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <HeroContent />
+                </div>
+
+                {/* Right Visual */}
+                <div style={{ position: 'relative' }}>
+                    <HeroVisual mouseX={mouseX} mouseY={mouseY} />
+                </div>
+            </div>
         </section>
     );
 }

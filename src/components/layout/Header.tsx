@@ -1,24 +1,28 @@
-// import { Logo } from '../ui/Logo';
-// import { Hamburger } from '../ui/Hamburger';
+import { Logo } from '../ui/Logo';
+import { Hamburger } from '../ui/Hamburger';
 
-export function Header() {
+interface HeaderProps {
+    onMenuClick?: () => void;
+}
+
+export function Header({ onMenuClick }: HeaderProps) {
     return (
         <header style={{
-            position: 'fixed',
+            position: 'absolute',
             top: 0,
             left: 0,
             right: 0,
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            padding: '2rem',
-            zIndex: 50
+            padding: 'var(--padding-y) var(--padding-x)',
+            zIndex: 50,
+            height: 'var(--header-height)'
         }}>
-            {/* <Logo /> */}
-            <div className="logo-placeholder">FIFA Logo (Left)</div>
-
-            {/* <Hamburger /> */}
-            <div className="hamburger-placeholder">Hamburger (Right)</div>
+            <Logo />
+            <div onClick={onMenuClick} style={{ cursor: 'pointer' }}>
+                <Hamburger />
+            </div>
         </header>
     );
 }
