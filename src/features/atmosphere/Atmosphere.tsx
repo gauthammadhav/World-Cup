@@ -59,15 +59,21 @@ export function Atmosphere() {
     };
 
     return (
-        <section id="atmosphere" style={{
-            minHeight: '100vh',
-            width: '100%',
-            backgroundColor: '#000000', // Changed to black for better contrast with new premium cards
-            paddingTop: '8rem',
-            paddingBottom: '8rem',
-            position: 'relative',
-            zIndex: 10
-        }}>
+        <motion.section
+            id="atmosphere"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: false, amount: 0.1 }}
+            transition={{ duration: 0.8 }}
+            style={{
+                minHeight: '100vh',
+                width: '100%',
+                backgroundColor: '#000000', // Changed to black for better contrast with new premium cards
+                paddingTop: '8rem',
+                paddingBottom: '8rem',
+                position: 'relative',
+                zIndex: 10
+            }}>
             <div style={{
                 maxWidth: '1400px',
                 margin: '0 auto',
@@ -224,6 +230,6 @@ export function Atmosphere() {
                 </div>
 
             </div>
-        </section>
+        </motion.section>
     );
 }
