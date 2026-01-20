@@ -1,5 +1,7 @@
 import { motion } from 'framer-motion';
 import { useRef, useEffect, useState } from 'react';
+import { HostNationCard } from './components/HostNationCard';
+import { StadiumCard } from './components/StadiumCard';
 
 const stadiums = Array.from({ length: 16 }, (_, i) => ({
     id: i,
@@ -56,20 +58,11 @@ export function Atmosphere() {
         }
     };
 
-    const cardVariants = {
-        hidden: { opacity: 0, y: 12 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
-        }
-    };
-
     return (
         <section id="atmosphere" style={{
             minHeight: '100vh',
             width: '100%',
-            backgroundColor: '#ffffff',
+            backgroundColor: '#000000', // Changed to black for better contrast with new premium cards
             paddingTop: '8rem',
             paddingBottom: '8rem',
             position: 'relative',
@@ -96,7 +89,7 @@ export function Atmosphere() {
                             fontSize: 'clamp(3rem, 5vw, 4rem)',
                             fontWeight: 900,
                             letterSpacing: '-0.02em',
-                            color: '#000',
+                            color: '#fff',
                             marginBottom: '0.5rem',
                             lineHeight: 0.9,
                             textTransform: 'uppercase'
@@ -123,7 +116,7 @@ export function Atmosphere() {
                             fontWeight: 500,
                             letterSpacing: '0.1em',
                             textTransform: 'uppercase',
-                            color: '#000',
+                            color: '#fff',
                             marginLeft: '0.2rem'
                         }}
                     >
@@ -135,7 +128,7 @@ export function Atmosphere() {
                 <motion.div
                     initial="hidden"
                     whileInView="visible"
-                    viewport={{ once: true, amount: 0.4 }}
+                    viewport={{ once: true, amount: 0.2 }} // Trigger earlier for smoother scroll
                     variants={staggerContainer}
                     style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}
                 >
@@ -144,70 +137,21 @@ export function Atmosphere() {
                         fontSize: '1.25rem',
                         fontWeight: 700,
                         textTransform: 'uppercase',
-                        color: '#000',
+                        color: '#fff',
                         letterSpacing: '0.05em'
                     }}>
                         HOST NATIONS
                     </h3>
 
                     <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '1rem',
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', // Responsive grid
+                        gap: '2rem',
                         width: '100%',
-                        maxWidth: '900px',
-                        margin: '0 auto'
                     }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', width: '100%' }}>
-                            {['USA', 'CANADA'].map(nation => (
-                                <motion.div
-                                    key={nation}
-                                    variants={cardVariants}
-                                    whileHover={{ y: -4, transition: { duration: 0.3, ease: 'easeOut' } }}
-                                    style={{
-                                        height: '140px',
-                                        backgroundColor: '#f4f4f4',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        fontFamily: 'var(--font-display)',
-                                        fontWeight: 700,
-                                        fontSize: '1.5rem',
-                                        letterSpacing: '0.05em',
-                                        color: '#000',
-                                        borderRadius: '4px',
-                                        cursor: 'default'
-                                    }}
-                                >
-                                    {nation}
-                                </motion.div>
-                            ))}
-                        </div>
-
-                        <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-                            <motion.div
-                                variants={cardVariants}
-                                whileHover={{ y: -4, transition: { duration: 0.3, ease: 'easeOut' } }}
-                                style={{
-                                    width: 'calc(50% - 0.5rem)',
-                                    height: '140px',
-                                    backgroundColor: '#f4f4f4',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontFamily: 'var(--font-display)',
-                                    fontWeight: 700,
-                                    fontSize: '1.5rem',
-                                    letterSpacing: '0.05em',
-                                    color: '#000',
-                                    borderRadius: '4px',
-                                    cursor: 'default'
-                                }}
-                            >
-                                MEXICO
-                            </motion.div>
-                        </div>
+                        {['USA', 'CANADA', 'MEXICO'].map(nation => (
+                            <HostNationCard key={nation} country={nation} />
+                        ))}
                     </div>
                 </motion.div>
 
@@ -224,7 +168,7 @@ export function Atmosphere() {
                                 fontSize: 'clamp(2rem, 3vw, 2.5rem)',
                                 fontWeight: 700,
                                 textTransform: 'uppercase',
-                                color: '#000',
+                                color: '#fff',
                                 marginBottom: '0.5rem',
                                 letterSpacing: '-0.02em'
                             }}
@@ -243,7 +187,7 @@ export function Atmosphere() {
                                 fontWeight: 500,
                                 letterSpacing: '0.1em',
                                 textTransform: 'uppercase',
-                                color: 'var(--text-secondary)'
+                                color: '#888' // Softer grey for dark mode
                             }}
                             aria-labelledby="stadiums-heading"
                         >
@@ -267,82 +211,14 @@ export function Atmosphere() {
                             cursor: isDragging ? 'grabbing' : 'grab',
                             scrollbarWidth: 'none',
                             msOverflowStyle: 'none',
-                            // paddingLeft: '50vw', // Attempt to center? No, layout breaks easily.
-                            // paddingRight: '50vw'
                         }}
                     >
                         {stadiums.map((stadium) => (
-                            <motion.div
+                            <StadiumCard
                                 key={stadium.id}
-                                initial="hidden"
-                                whileInView="visible"
-                                // Focus Logic: "In View" in the center = Fully opaque. 
-                                // Margin clamps the 'view' to the center 40% of the container.
-                                viewport={{ root: scrollContainerRef, margin: "0px -30% 0px -30%" }}
-                                variants={{
-                                    hidden: { opacity: 0.4, y: 12 }, // Muted by default
-                                    visible: {
-                                        opacity: 1,
-                                        y: 0,
-                                        transition: { duration: 0.5 }
-                                    }
-                                }}
-                                whileHover="hover"
-                                style={{
-                                    flexShrink: 0,
-                                    width: '300px',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: '1.25rem',
-                                    cursor: 'pointer' // interactive feel
-                                }}
-                            >
-                                {/* Image Placeholder */}
-                                <motion.div
-                                    variants={{
-                                        hover: { scale: 1.02 } // Subtle scale on hover
-                                    }}
-                                    transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                                    style={{
-                                        width: '100%',
-                                        aspectRatio: '3/4',
-                                        backgroundColor: '#e5e5e5',
-                                        borderRadius: '4px', // Soft rounded?
-                                        overflow: 'hidden'
-                                    }}
-                                >
-                                    {/* Inner content if any */}
-                                </motion.div>
-
-                                {/* Info */}
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                    <motion.span
-                                        variants={{
-                                            hover: { opacity: 1, color: '#000' } // Ensure emphasis
-                                        }}
-                                        style={{
-                                            fontFamily: 'var(--font-display)',
-                                            fontWeight: 700,
-                                            fontSize: '1.125rem',
-                                            textTransform: 'uppercase',
-                                            color: '#000', // Default
-                                            opacity: 0.9 // Slightly softer default to allow emphasis?
-                                        }}
-                                    >
-                                        {stadium.name}
-                                    </motion.span>
-                                    <span style={{
-                                        fontFamily: 'var(--font-display)',
-                                        fontWeight: 500,
-                                        fontSize: '0.75rem',
-                                        textTransform: 'uppercase',
-                                        color: '#666',
-                                        letterSpacing: '0.05em'
-                                    }}>
-                                        {stadium.location}
-                                    </span>
-                                </div>
-                            </motion.div>
+                                name={stadium.name}
+                                location={stadium.location}
+                            />
                         ))}
                     </div>
                 </div>
