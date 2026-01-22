@@ -3,89 +3,65 @@ import { motion } from 'framer-motion';
 export function HostFlagPanel({ country, flagImage }: { country: string, flagImage: string }) {
     return (
         <motion.div
-            initial="rest"
-            whileHover="hover"
-            animate="rest"
             style={{
                 width: '100%',
-                position: 'relative',
                 display: 'flex',
                 alignItems: 'center',
                 flexDirection: 'column',
-                gap: '1.5rem',
+                gap: '1.25rem',
             }}
         >
-            {/* Flag Container */}
+            {/* Card Container */}
             <motion.div
-                variants={{
-                    rest: { rotate: 0, scale: 1, boxShadow: '0 10px 30px rgba(0,0,0,0.1)' },
-                    hover: { rotate: -2, scale: 1.05, boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }
-                }}
-                transition={{ duration: 0.5, type: 'spring', stiffness: 100 }}
+                whileHover={{ y: -5, boxShadow: '0 10px 20px rgba(0,0,0,0.05)' }}
+                transition={{ duration: 0.3 }}
                 style={{
                     width: '100%',
-                    aspectRatio: '3/2',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    transformPerspective: '1000px',
-                    backgroundColor: '#f0f0f0'
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #eaeaea', // 1px light gray
+                    borderRadius: '12px', // 10-14px
+                    padding: '1.5rem', // Medium padding
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    // No heavy shadows or gradients
+                    boxShadow: 'none'
                 }}
             >
-                <motion.img
-                    src={flagImage}
-                    alt={`${country} Flag`}
-                    style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        display: 'block'
-                    }}
-                />
+                <div style={{
+                    width: '100%',
+                    aspectRatio: '3/2', // Preserve aspect ratio inside card
+                    position: 'relative',
+                    overflow: 'hidden',
+                    borderRadius: '6px', // Slight inner radius for aesthetic
+                }}>
+                    <img
+                        src={flagImage}
+                        alt={`${country} Flag`}
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            display: 'block'
+                        }}
+                    />
+                </div>
             </motion.div>
 
             {/* Country Label */}
             <div style={{ textAlign: 'center' }}>
-                <span style={{
-                    display: 'block',
+                <h3 style={{
                     fontFamily: 'var(--font-display)',
-                    fontSize: '0.75rem',
-                    fontWeight: 500,
+                    fontSize: '1rem', // Smaller than heading, larger than body
+                    fontWeight: 600, // Medium/SemiBold
+                    color: '#111', // Dark gray/black
                     textTransform: 'uppercase',
-                    letterSpacing: '0.2em',
-                    color: '#666',
-                    marginBottom: '0.5rem'
+                    letterSpacing: '0.05em', // +5%
+                    lineHeight: 1,
+                    margin: 0
                 }}>
-                    Host Nation
-                </span>
-                <div style={{ position: 'relative', display: 'inline-block', overflow: 'hidden' }}>
-                    <h3 style={{
-                        fontFamily: 'var(--font-display)',
-                        fontSize: 'clamp(1.5rem, 2vw, 2rem)',
-                        fontWeight: 900,
-                        color: '#111', // Dark text
-                        textTransform: 'uppercase',
-                        letterSpacing: '-0.02em',
-                        lineHeight: 1,
-                        margin: 0
-                    }}>
-                        {country}
-                    </h3>
-                    <motion.div
-                        variants={{
-                            rest: { x: '-100%' },
-                            hover: { x: '0%' }
-                        }}
-                        transition={{ duration: 0.3, ease: 'easeOut' }}
-                        style={{
-                            position: 'absolute',
-                            bottom: 0,
-                            left: 0,
-                            width: '100%',
-                            height: '2px',
-                            backgroundColor: '#111'
-                        }}
-                    />
-                </div>
+                    {country}
+                </h3>
             </div>
         </motion.div>
     );

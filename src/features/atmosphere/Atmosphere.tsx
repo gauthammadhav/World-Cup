@@ -4,7 +4,7 @@ import { HostFlagPanel } from './components/HostFlagPanel';
 import { StadiumCard } from './components/StadiumCard';
 import usaFlag from '../../assets/images/usa-flag.png';
 import canadaFlag from '../../assets/images/canada-flag.png';
-import mexicoFlag from '../../assets/images/mexico-flag.png';
+import mexicoFlag from '../../assets/images/mexico-flag.jpg';
 
 const stadiums = Array.from({ length: 16 }, (_, i) => ({
     id: i,
