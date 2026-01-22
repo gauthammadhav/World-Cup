@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { type ReactNode } from 'react';
 
 interface LayoutProps {
     children: ReactNode;
@@ -6,10 +6,10 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
     return (
-        <>
-            <main>
+        <div style={{ position: 'relative', width: '100%', minHeight: '100vh', backgroundColor: '#ffffff' }}>
+            <main style={{ position: 'relative', zIndex: 1 }}>
                 {children}
             </main>
-        </>
+        </div>
     );
 }

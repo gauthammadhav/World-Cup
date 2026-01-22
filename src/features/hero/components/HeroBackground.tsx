@@ -1,4 +1,4 @@
-import { motion, MotionValue, useTransform, useSpring, useScroll, useVelocity } from 'framer-motion';
+import { motion, MotionValue, useSpring, useTransform } from 'framer-motion';
 
 interface HeroBackgroundProps {
     mouseX: MotionValue<number>;
@@ -6,37 +6,27 @@ interface HeroBackgroundProps {
 }
 
 export function HeroBackground({ mouseX, mouseY }: HeroBackgroundProps) {
-    // Tighter Baseline: Increased line count (20 -> 30)
-    const lineCount = 30;
-    const lines = Array.from({ length: lineCount }, (_, i) => i);
+    // Grid Configuration
+    const hexSize = 40; // Radius of a hexagon
+    const hexHeight = hexSize * 2;
+    const hexWidth = Math.sqrt(3) * hexSize;
+    const gap = 4; // Space between hexes
 
-    // Spring configuration for magnetic effect
-    const springConfig = { damping: 25, stiffness: 50 };
+    // Create a grid that covers a standard 1920x1080 screen with buffer
+    const rows = 12;
+    const cols = 24;
 
-    // Breathing Interaction (Step: Refined Interaction)
-    // Detect mouse motion velocity to trigger "breathing"
-    const velY = useVelocity(mouseY);
-    const velX = useVelocity(mouseX);
+    // Generate Grid Points
+    const hexagons = [];
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+            const xOffset = (row % 2) * (hexWidth / 2);
+            const x = (col * (hexWidth + gap)) + xOffset - 100;
+            const y = (row * (hexHeight * 0.75 + gap)) - 100;
 
-    // Smooth out the velocity signal
-    const smoothVelY = useSpring(velY, { damping: 20, stiffness: 50 });
-    const smoothVelX = useSpring(velX, { damping: 20, stiffness: 50 });
-
-    // Map velocity to a spread factor
-    // When steady (0 vel) -> 1 (Baseline)
-    // When moving -> scales up spacing slightly (up to 1.15)
-    // Using both X and Y velocity to trigger breath on any movement
-    const breathingFactorY = useTransform(smoothVelY, [-0.5, 0, 0.5], [1.15, 1, 1.15]);
-    const breathingFactorX = useTransform(smoothVelX, [-0.5, 0, 0.5], [1.15, 1, 1.15]);
-
-    // Combine factors (could simply add them or multiply, keeping it subtle)
-    // We'll trust Framer Motion to handle the transform chain, 
-    // but here we need a single scalar. Let's merge them conceptually.
-    // Actually, distinct transforms for each line is cleaner.
-
-    // Scroll Fade (Step 5)
-    const { scrollY } = useScroll();
-    const opacity = useTransform(scrollY, [0, 300], [0.4, 0]);
+            hexagons.push({ id: `hex-${row}-${col}`, row, col, x, y });
+        }
+    }
 
     return (
         <div
@@ -49,65 +39,93 @@ export function HeroBackground({ mouseX, mouseY }: HeroBackgroundProps) {
                 height: '100%',
                 zIndex: 0,
                 pointerEvents: 'none',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                background: 'radial-gradient(circle at 50% 50%, rgba(20,20,20,0) 0%, rgba(0,0,0,0.4) 100%)' // Vignette
             }}
         >
-            <motion.svg
+            <svg
                 width="100%"
                 height="100%"
-                style={{ opacity }} // Linked scroll opacity
+                style={{ opacity: 0.3 }} // Subtle global opacity
             >
-                {lines.map((i) => {
-                    // Center-based positioning
-                    // 0..29. Center is approx 14.5.
-                    const offsetFromCenter = i - (lineCount / 2); // -15 to +15
+                <defs>
+                    <pattern id="hex-pattern" width="100" height="100" patternUnits="userSpaceOnUse">
+                        {/* Optional pattern definition if needed later */}
+                    </pattern>
+                </defs>
 
-                    // Baseline spacing: 3.5% height per line
-                    // Total height spread: 30 * 3.5% = 105% (covers screen nicely)
-                    const baseSpacing = 3.5;
-
-                    // Compute baseline Y percent
-                    const baseY = 50 + (offsetFromCenter * baseSpacing);
-
-                    // Magnetic / Parallax Factors
-                    const factor = (i % 2 === 0 ? 1 : -1) * (i / 15);
-                    const yShift = useTransform(mouseY, [-1, 1], [-10 * factor, 10 * factor]);
-                    const xShift = useTransform(mouseX, [-1, 1], [-5 * factor, 5 * factor]);
-                    const smoothY = useSpring(yShift, springConfig);
-                    const smoothX = useSpring(xShift, springConfig);
-
-                    // Breathing Transform
-                    // We multiply the offsetFromCenter by the breathing factor.
-                    // This makes lines visually "expand" from the center.
-                    const finalY = useTransform(
-                        [breathingFactorX, breathingFactorY],
-                        ([bx, by]) => {
-                            // Combine breath factors (take max or average)
-                            const breath = Math.max(bx as number, by as number);
-                            return `${50 + (offsetFromCenter * baseSpacing * breath)}%`;
-                        }
-                    );
-
-                    // Smooth the final Y position to make the breath feel elastic/organic
-                    const smoothFinalY = useSpring(finalY, { damping: 20, stiffness: 80 });
-
-                    return (
-                        <motion.line
-                            key={i}
-                            x1="0"
-                            y1={smoothFinalY} // Animated Y position
-                            x2="100%"
-                            y2={smoothFinalY}
-                            stroke="#e5e5e5" // Light gray
-                            strokeWidth="1"
-                            style={{
-                                y: smoothY, // Add parallax shift on top
-                                x: smoothX
-                            }}
-                        />
-                    );
-                })}
-            </motion.svg>
+                {hexagons.map((hex) => (
+                    <Hexagon
+                        key={hex.id}
+                        x={hex.x}
+                        y={hex.y}
+                        size={hexSize}
+                        mouseX={mouseX}
+                        mouseY={mouseY}
+                        row={hex.row}
+                        col={hex.col}
+                    />
+                ))}
+            </svg>
         </div>
+    );
+}
+
+// Sub-component for individual Hexagon to manage its own animation performance
+function Hexagon({ x, y, size, mouseX, mouseY, row, col }: {
+    x: number, y: number, size: number,
+    mouseX: MotionValue<number>,
+    mouseY: MotionValue<number>,
+    row: number, col: number
+}) {
+    // Path for a hexagon centered at (0,0)
+    // Points: (cos(a)*r, sin(a)*r) for a = 0, 60, 120...
+    const points = [0, 60, 120, 180, 240, 300].map(angle => {
+        const rad = (angle * Math.PI) / 180;
+        return `${Math.cos(rad) * size},${Math.sin(rad) * size}`;
+    }).join(' ');
+
+    // Interaction Logic
+    // We can't easily calculate distance from mouseX/Y in SVG coords without a ref hook or expensive listeners.
+    // Instead, we'll use a simplified parralax/wave effect based on position.
+
+    // Parallax Shift
+    // Hexagons move slightly based on mouse position
+    const moveX = useTransform(mouseX, [-1, 1], [-20, 20]);
+    const moveY = useTransform(mouseY, [-1, 1], [-20, 20]);
+
+    const smoothX = useSpring(moveX, { damping: 25, stiffness: 50 });
+    const smoothY = useSpring(moveY, { damping: 25, stiffness: 50 });
+
+    // Dynamic Opacity/Scale based on 'breathing' or random pulse
+    // To keep it performant (essential for many elements), we rely on CSS or simple loop animations
+    // Let's add a subtle individual pulse delay based on position
+
+    return (
+        <motion.g
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{
+                duration: 1,
+                delay: (row * 0.05) + (col * 0.05), // Wave enter
+                ease: "easeOut"
+            }}
+            style={{ x: smoothX, y: smoothY }}
+        >
+            <motion.polygon
+                points={points}
+                fill="transparent"
+                stroke="rgba(255,255,255,0.15)"
+                strokeWidth="1.5"
+                transform={`translate(${x}, ${y})`}
+                whileHover={{
+                    stroke: "rgba(255,255,255,0.8)",
+                    scale: 1.1,
+                    transition: { duration: 0.2 }
+                }}
+            />
+            {/* Small center dot for tech feel */}
+            <circle cx={x} cy={y} r="2" fill="rgba(255,255,255,0.1)" />
+        </motion.g>
     );
 }

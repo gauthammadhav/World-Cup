@@ -93,7 +93,7 @@ export function StadiumCard({ name, location }: StadiumCardProps) {
                     fontWeight: 500,
                     fontSize: '0.85rem',
                     textTransform: 'uppercase',
-                    color: '#666',
+                    color: '#999',
                     letterSpacing: '0.1em'
                 }}>
                     {location}

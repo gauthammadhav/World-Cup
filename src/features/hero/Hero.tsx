@@ -37,12 +37,15 @@ export function Hero() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: '#ffffff' // Ensure white background
+            background: 'transparent' // Transparent to show global background
         }}>
-            <HeroBackground mouseX={mouseX} mouseY={mouseY} />
+            {/* Background Lines */}
+            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 0 }}>
+                <HeroBackground mouseX={mouseX} mouseY={mouseY} />
+            </div>
+
             <MenuOverlay isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
 
-            {/* BackgroundField removed in favor of interactive HeroBackground */}
             <Header onMenuClick={() => setIsMenuOpen(true)} />
 
             <div className="hero-grid" style={{

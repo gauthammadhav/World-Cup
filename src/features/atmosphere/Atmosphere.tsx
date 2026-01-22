@@ -1,7 +1,10 @@
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { useRef, useEffect, useState } from 'react';
-import { HostNationCard } from './components/HostNationCard';
+import { HostFlagPanel } from './components/HostFlagPanel';
 import { StadiumCard } from './components/StadiumCard';
+import usaFlag from '../../assets/images/usa-flag.png';
+import canadaFlag from '../../assets/images/canada-flag.png';
+import mexicoFlag from '../../assets/images/mexico-flag.png';
 
 const stadiums = Array.from({ length: 16 }, (_, i) => ({
     id: i,
@@ -11,7 +14,28 @@ const stadiums = Array.from({ length: 16 }, (_, i) => ({
 
 export function Atmosphere() {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
     const [isDragging, setIsDragging] = useState(false);
+
+    // Stacking Scroll Logic
+    const { scrollYProgress } = useScroll({
+        target: containerRef,
+        offset: ["start start", "end end"]
+    });
+
+    // Card 1 (USA): Scales down slightly and dims as others cover it
+    const cardScale1 = useTransform(scrollYProgress, [0, 0.4], [1, 0.95]);
+    const cardBrightness1 = useTransform(scrollYProgress, [0, 0.4], ["brightness(1)", "brightness(0.7)"]);
+
+    // Card 2 (Mexico): Sits below visible area, slides up
+    // Enters from 0.1 to 0.5
+    const cardY2 = useTransform(scrollYProgress, [0.1, 0.5], ["100%", "0%"]);
+    const cardScale2 = useTransform(scrollYProgress, [0.5, 0.9], [1, 0.95]);
+    const cardBrightness2 = useTransform(scrollYProgress, [0.5, 0.9], ["brightness(1)", "brightness(0.7)"]);
+
+    // Card 3 (Canada): Slides up over Mexico
+    // Enters from 0.6 to 1.0
+    const cardY3 = useTransform(scrollYProgress, [0.6, 1.0], ["100%", "0%"]);
 
     // Horizontal Scroll Logic
     useEffect(() => {
@@ -47,16 +71,7 @@ export function Atmosphere() {
         }
     };
 
-    const staggerContainer = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.12,
-                delayChildren: 0.1
-            }
-        }
-    };
+
 
     return (
         <motion.section
@@ -68,7 +83,7 @@ export function Atmosphere() {
             style={{
                 minHeight: '100vh',
                 width: '100%',
-                backgroundColor: '#000000', // Changed to black for better contrast with new premium cards
+                backgroundColor: '#000000', // Black background
                 paddingTop: '8rem',
                 paddingBottom: '8rem',
                 position: 'relative',
@@ -95,7 +110,7 @@ export function Atmosphere() {
                             fontSize: 'clamp(3rem, 5vw, 4rem)',
                             fontWeight: 900,
                             letterSpacing: '-0.02em',
-                            color: '#fff',
+                            color: '#ffffff', // Light text
                             marginBottom: '0.5rem',
                             lineHeight: 0.9,
                             textTransform: 'uppercase'
@@ -122,7 +137,7 @@ export function Atmosphere() {
                             fontWeight: 500,
                             letterSpacing: '0.1em',
                             textTransform: 'uppercase',
-                            color: '#fff',
+                            color: '#ffffff', // Light text
                             marginLeft: '0.2rem'
                         }}
                     >
@@ -131,35 +146,89 @@ export function Atmosphere() {
                 </div>
 
                 {/* 3. HOST NATIONS BLOCK */}
-                <motion.div
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, amount: 0.2 }} // Trigger earlier for smoother scroll
-                    variants={staggerContainer}
-                    style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}
+                {/* 3. HOST NATIONS BLOCK */}
+                {/* 3. HOST NATIONS BLOCK */}
+                <div
+                    ref={containerRef}
+                    style={{
+                        position: 'relative',
+                        height: '300vh', // Tall container for scroll space
+                        width: '100%'
+                    }}
                 >
-                    <h3 style={{
-                        fontFamily: 'var(--font-display)',
-                        fontSize: '1.25rem',
-                        fontWeight: 700,
-                        textTransform: 'uppercase',
-                        color: '#fff',
-                        letterSpacing: '0.05em'
-                    }}>
-                        HOST NATIONS
-                    </h3>
-
                     <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', // Responsive grid
-                        gap: '2rem',
-                        width: '100%',
+                        position: 'sticky',
+                        top: 0,
+                        height: '100vh',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        overflow: 'hidden'
                     }}>
-                        {['USA', 'CANADA', 'MEXICO'].map(nation => (
-                            <HostNationCard key={nation} country={nation} />
-                        ))}
+                        <motion.h3
+                            style={{
+                                fontFamily: 'var(--font-display)',
+                                fontSize: '1.25rem',
+                                fontWeight: 700,
+                                textTransform: 'uppercase',
+                                color: '#ffffff',
+                                letterSpacing: '0.05em',
+                                textAlign: 'left',
+                                marginBottom: '2rem',
+                                opacity: useTransform(scrollYProgress, [0, 0.1], [0, 1])
+                            }}
+                        >
+                            HOST NATIONS
+                        </motion.h3>
+
+                        <div style={{
+                            position: 'relative',
+                            width: '100%',
+                            maxWidth: '600px', // Constrain width for card look
+                            margin: '0 auto',
+                            aspectRatio: '3/2' // Match flag ratio + text space approx
+                        }}>
+                            {/* USA (Base Card) */}
+                            <motion.div style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                zIndex: 1,
+                                scale: cardScale1,
+                                filter: cardBrightness1
+                            }}>
+                                <HostFlagPanel country="UNITED STATES" flagImage={usaFlag} />
+                            </motion.div>
+
+                            {/* MEXICO (Slides Start) */}
+                            <motion.div style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                zIndex: 2,
+                                y: cardY2,
+                                scale: cardScale2,
+                                filter: cardBrightness2 // Optional shadow/dimming
+                            }}>
+                                <HostFlagPanel country="MEXICO" flagImage={mexicoFlag} />
+                            </motion.div>
+
+                            {/* CANADA (Slides Last) */}
+                            <motion.div style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                zIndex: 3,
+                                y: cardY3
+                            }}>
+                                <HostFlagPanel country="CANADA" flagImage={canadaFlag} />
+                            </motion.div>
+                        </div>
                     </div>
-                </motion.div>
+                </div>
 
                 {/* 4. & 5. STADIUMS BLOCK */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
@@ -174,7 +243,7 @@ export function Atmosphere() {
                                 fontSize: 'clamp(2rem, 3vw, 2.5rem)',
                                 fontWeight: 700,
                                 textTransform: 'uppercase',
-                                color: '#fff',
+                                color: '#ffffff', // Light text
                                 marginBottom: '0.5rem',
                                 letterSpacing: '-0.02em'
                             }}
@@ -193,7 +262,7 @@ export function Atmosphere() {
                                 fontWeight: 500,
                                 letterSpacing: '0.1em',
                                 textTransform: 'uppercase',
-                                color: '#888' // Softer grey for dark mode
+                                color: '#999' // Light grey
                             }}
                             aria-labelledby="stadiums-heading"
                         >
