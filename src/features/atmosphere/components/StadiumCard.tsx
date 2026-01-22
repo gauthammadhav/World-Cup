@@ -11,90 +11,92 @@ export function StadiumCard({ name, location }: StadiumCardProps) {
             initial="hidden"
             whileInView="visible"
             variants={{
-                hidden: { opacity: 0, y: 20 },
+                hidden: { opacity: 0, y: 30 },
                 visible: {
                     opacity: 1,
                     y: 0,
-                    transition: { duration: 0.5, ease: "easeOut" }
+                    transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
                 }
             }}
             whileHover="hover"
             style={{
                 flexShrink: 0,
-                width: '320px',
+                width: '300px',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '1rem',
-                cursor: 'pointer'
+                gap: '1.25rem',
+                cursor: 'grab'
             }}
         >
-            {/* Image Placeholder */}
+            {/* Image Container */}
             <motion.div
                 variants={{
-                    hover: { scale: 1.02 }
+                    hover: { scale: 1.03, y: -5 }
                 }}
                 transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                 style={{
                     width: '100%',
-                    aspectRatio: '3/4',
-                    background: 'linear-gradient(160deg, #1a1a1a 0%, #2a2a2a 100%)',
-                    borderRadius: '8px',
+                    aspectRatio: '2/3', // Tall poster format
+                    background: '#e0e0e0', // Light grey placeholder base
+                    borderRadius: '20px',
                     overflow: 'hidden',
                     position: 'relative',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.05)'
                 }}
             >
-                {/* Abstract arch/stadium shape hint */}
+                {/* Placeholder Gradient / Image */}
                 <div style={{
-                    position: 'absolute',
-                    bottom: '-20%',
-                    left: '10%',
-                    width: '80%',
-                    height: '40%',
-                    border: '2px solid rgba(255,255,255,0.05)',
-                    borderRadius: '50%',
-                    boxShadow: '0 0 40px rgba(255,255,255,0.02) inset'
-                }} />
-
-                <div style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    opacity: 0.1,
+                    width: '100%',
+                    height: '100%',
+                    background: 'linear-gradient(to bottom, #f5f5f5, #e0e0e0)',
+                    position: 'relative'
                 }}>
-                    {/* Simple icon or shape center */}
-                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M3 21H21M5 21V7L12 3L19 7V21M9 10H15" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
+                    {/* Subtle Overlay */}
+                    <div style={{
+                        position: 'absolute',
+                        inset: 0,
+                        background: 'linear-gradient(to top, rgba(0,0,0,0.4) 0%, transparent 50%)',
+                        zIndex: 1
+                    }} />
+
+                    {/* Noise Grain (Simulated) */}
+                    <div style={{
+                        position: 'absolute',
+                        inset: 0,
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E")`,
+                        opacity: 0.4,
+                        pointerEvents: 'none',
+                        zIndex: 2
+                    }} />
                 </div>
             </motion.div>
 
             {/* Info */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', paddingLeft: '0.5rem' }}>
                 <motion.span
                     variants={{
-                        hover: { color: '#fff' }
+                        hover: { y: -2, color: '#000' }
                     }}
+                    transition={{ duration: 0.3 }}
                     style={{
                         fontFamily: 'var(--font-display)',
                         fontWeight: 700,
-                        fontSize: '1.25rem',
+                        fontSize: '1.125rem',
                         textTransform: 'uppercase',
-                        color: 'rgba(255,255,255,0.9)',
-                        letterSpacing: '0.02em',
-                        transition: 'color 0.3s ease'
+                        color: '#111',
+                        letterSpacing: '-0.01em',
+                        lineHeight: 1.1
                     }}
                 >
                     {name}
                 </motion.span>
                 <span style={{
                     fontFamily: 'var(--font-display)',
-                    fontWeight: 500,
-                    fontSize: '0.85rem',
+                    fontWeight: 400,
+                    fontSize: '0.875rem',
                     textTransform: 'uppercase',
-                    color: '#999',
-                    letterSpacing: '0.1em'
+                    color: '#666',
+                    letterSpacing: '0.05em'
                 }}>
                     {location}
                 </span>

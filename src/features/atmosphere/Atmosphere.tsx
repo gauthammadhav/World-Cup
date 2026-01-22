@@ -14,274 +14,246 @@ const stadiums = Array.from({ length: 16 }, (_, i) => ({
 
 export function Atmosphere() {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
     const [isDragging, setIsDragging] = useState(false);
+    const [startX, setStartX] = useState(0);
+    const [scrollLeft, setScrollLeft] = useState(0);
 
-    // Stacking Scroll Logic
-    const { scrollYProgress } = useScroll({
-        target: containerRef,
-        offset: ["start start", "end end"]
-    });
-
-    // Card 1 (USA): Scales down slightly and dims as others cover it
-    const cardScale1 = useTransform(scrollYProgress, [0, 0.4], [1, 0.95]);
-    const cardBrightness1 = useTransform(scrollYProgress, [0, 0.4], ["brightness(1)", "brightness(0.7)"]);
-
-    // Card 2 (Mexico): Sits below visible area, slides up
-    // Enters from 0.1 to 0.5
-    const cardY2 = useTransform(scrollYProgress, [0.1, 0.5], ["100%", "0%"]);
-    const cardScale2 = useTransform(scrollYProgress, [0.5, 0.9], [1, 0.95]);
-    const cardBrightness2 = useTransform(scrollYProgress, [0.5, 0.9], ["brightness(1)", "brightness(0.7)"]);
-
-    // Card 3 (Canada): Slides up over Mexico
-    // Enters from 0.6 to 1.0
-    const cardY3 = useTransform(scrollYProgress, [0.6, 1.0], ["100%", "0%"]);
-
-    // Horizontal Scroll Logic
+    // Horizontal Scroll Logic for Stadiums
     useEffect(() => {
         const container = scrollContainerRef.current;
         if (!container) return;
 
         const handleWheel = (e: WheelEvent) => {
-            if (e.deltaY === 0) return;
-
-            // Check if we are at the boundaries
-            const isAtStart = container.scrollLeft === 0;
-            const isAtEnd = Math.abs(container.scrollWidth - container.scrollLeft - container.clientWidth) < 2;
-
-            if ((isAtStart && e.deltaY < 0) || (isAtEnd && e.deltaY > 0)) {
-                return; // Default vertical scroll
+            if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                // If mostly vertical scroll, let native behavior happen unless we want to map it
+                // For this request, distinct horizontal scroll usually implies mapped or simple overflow
+                // We'll map vertical wheel to horizontal scroll for ease of use
+                e.preventDefault();
+                container.scrollLeft += e.deltaY;
             }
-
-            e.preventDefault();
-            container.scrollLeft += e.deltaY;
         };
 
         container.addEventListener('wheel', handleWheel, { passive: false });
         return () => container.removeEventListener('wheel', handleWheel);
     }, []);
 
-    // Animation Variants
-    const revealVariants = {
-        hidden: { opacity: 0, y: 12 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] }
-        }
+    const handleMouseDown = (e: React.MouseEvent) => {
+        if (!scrollContainerRef.current) return;
+        setIsDragging(true);
+        setStartX(e.pageX - scrollContainerRef.current.offsetLeft);
+        setScrollLeft(scrollContainerRef.current.scrollLeft);
+    };
+
+    const handleMouseLeave = () => {
+        setIsDragging(false);
+    };
+
+    const handleMouseUp = () => {
+        setIsDragging(false);
+    };
+
+    const handleMouseMove = (e: React.MouseEvent) => {
+        if (!isDragging || !scrollContainerRef.current) return;
+        e.preventDefault();
+        const x = e.pageX - scrollContainerRef.current.offsetLeft;
+        const walk = (x - startX) * 2; // Scroll-fast
+        scrollContainerRef.current.scrollLeft = scrollLeft - walk;
     };
 
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: { staggerChildren: 0.2 }
+        }
+    };
+
+    const fadeInUp = {
+        hidden: { opacity: 0, y: 30 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
+        }
+    };
 
     return (
         <motion.section
             id="atmosphere"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
+            initial="hidden"
+            whileInView="visible"
             viewport={{ once: false, amount: 0.1 }}
-            transition={{ duration: 0.8 }}
             style={{
                 minHeight: '100vh',
                 width: '100%',
-                backgroundColor: '#000000', // Black background
-                paddingTop: '8rem',
-                paddingBottom: '8rem',
+                backgroundColor: '#ffffff', // White background
+                color: '#111111',
+                paddingTop: '10rem',
+                paddingBottom: '10rem',
                 position: 'relative',
-                zIndex: 10
+                zIndex: 10,
+                overflow: 'hidden'
             }}>
+
+            {/* Background Texture/Map (Subtle) */}
+            <div style={{
+                position: 'absolute',
+                inset: 0,
+                opacity: 0.03,
+                backgroundImage: 'repeating-linear-gradient(45deg, #000 0, #000 1px, transparent 0, transparent 50%)',
+                backgroundSize: '30px 30px',
+                pointerEvents: 'none'
+            }} />
+
             <div style={{
                 maxWidth: '1400px',
                 margin: '0 auto',
                 padding: '0 var(--padding-x)',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '8rem'
+                gap: '12rem',
+                position: 'relative',
+                zIndex: 1
             }}>
 
-                {/* 1. & 2. SECTION HEADINGS */}
-                <div style={{ textAlign: 'left' }}>
+                {/* 1. SECTION INTRO */}
+                <motion.div
+                    variants={containerVariants}
+                    style={{ textAlign: 'left', maxWidth: '800px' }}
+                >
                     <motion.h2
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: false, amount: 0.6 }} // Reversible
-                        variants={revealVariants}
+                        variants={fadeInUp}
                         style={{
                             fontFamily: 'var(--font-display)',
-                            fontSize: 'clamp(3rem, 5vw, 4rem)',
+                            fontSize: 'clamp(4rem, 8vw, 6rem)',
                             fontWeight: 900,
-                            letterSpacing: '-0.02em',
-                            color: '#ffffff', // Light text
-                            marginBottom: '0.5rem',
-                            lineHeight: 0.9,
+                            letterSpacing: '-0.04em',
+                            color: '#000',
+                            marginBottom: '1rem',
+                            lineHeight: 0.85,
                             textTransform: 'uppercase'
                         }}
                     >
                         ATMOSPHERE
                     </motion.h2>
 
-                    <motion.p
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: false, amount: 0.6 }}
-                        variants={{
-                            hidden: { opacity: 0, y: 12 },
-                            visible: {
-                                opacity: 1,
-                                y: 0,
-                                transition: { duration: 0.6, delay: 0.08, ease: [0.16, 1, 0.3, 1] }
-                            }
-                        }}
-                        style={{
-                            fontFamily: 'var(--font-display)',
-                            fontSize: 'clamp(1rem, 1.5vw, 1.25rem)',
-                            fontWeight: 500,
-                            letterSpacing: '0.1em',
-                            textTransform: 'uppercase',
-                            color: '#ffffff', // Light text
-                            marginLeft: '0.2rem'
-                        }}
+                    <motion.div
+                        variants={fadeInUp}
+                        style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}
                     >
-                        THREE NATIONS. ONE STAGE.
-                    </motion.p>
-                </div>
-
-                {/* 3. HOST NATIONS BLOCK */}
-                {/* 3. HOST NATIONS BLOCK */}
-                {/* 3. HOST NATIONS BLOCK */}
-                <div
-                    ref={containerRef}
-                    style={{
-                        position: 'relative',
-                        height: '300vh', // Tall container for scroll space
-                        width: '100%'
-                    }}
-                >
-                    <div style={{
-                        position: 'sticky',
-                        top: 0,
-                        height: '100vh',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        overflow: 'hidden'
-                    }}>
-                        <motion.h3
-                            style={{
-                                fontFamily: 'var(--font-display)',
-                                fontSize: '1.25rem',
-                                fontWeight: 700,
-                                textTransform: 'uppercase',
-                                color: '#ffffff',
-                                letterSpacing: '0.05em',
-                                textAlign: 'left',
-                                marginBottom: '2rem',
-                                opacity: useTransform(scrollYProgress, [0, 0.1], [0, 1])
-                            }}
-                        >
-                            HOST NATIONS
-                        </motion.h3>
-
-                        <div style={{
-                            position: 'relative',
-                            width: '100%',
-                            maxWidth: '600px', // Constrain width for card look
-                            margin: '0 auto',
-                            aspectRatio: '3/2' // Match flag ratio + text space approx
+                        <p style={{
+                            fontFamily: 'var(--font-display)',
+                            fontSize: 'clamp(1.5rem, 2vw, 2rem)',
+                            fontWeight: 300, // Light
+                            letterSpacing: '-0.02em',
+                            textTransform: 'none',
+                            color: '#000',
+                            margin: 0
                         }}>
-                            {/* USA (Base Card) */}
-                            <motion.div style={{
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                width: '100%',
-                                zIndex: 1,
-                                scale: cardScale1,
-                                filter: cardBrightness1
-                            }}>
-                                <HostFlagPanel country="UNITED STATES" flagImage={usaFlag} />
-                            </motion.div>
+                            Three Nations. One World Cup.
+                        </p>
+                        <p style={{
+                            fontFamily: 'var(--font-body)',
+                            fontSize: '1rem',
+                            color: '#666',
+                            marginTop: '1rem',
+                            maxWidth: '500px',
+                            lineHeight: 1.5
+                        }}>
+                            North America becomes the world’s biggest football stage in 2026.
+                        </p>
+                    </motion.div>
+                </motion.div>
 
-                            {/* MEXICO (Slides Start) */}
-                            <motion.div style={{
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                width: '100%',
-                                zIndex: 2,
-                                y: cardY2,
-                                scale: cardScale2,
-                                filter: cardBrightness2 // Optional shadow/dimming
-                            }}>
-                                <HostFlagPanel country="MEXICO" flagImage={mexicoFlag} />
-                            </motion.div>
+                {/* 2. HOST NATIONS LAYOUT */}
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1.2fr 1fr',
+                    gridTemplateRows: 'auto auto',
+                    gap: '4rem',
+                    alignItems: 'center'
+                }}>
 
-                            {/* CANADA (Slides Last) */}
-                            <motion.div style={{
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                width: '100%',
-                                zIndex: 3,
-                                y: cardY3
-                            }}>
-                                <HostFlagPanel country="CANADA" flagImage={canadaFlag} />
-                            </motion.div>
+                    {/* Canada (Bottom Left) */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 50 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, delay: 0.2 }}
+                        style={{ gridColumn: '1', gridRow: '2', marginTop: '-4rem' }}
+                    >
+                        <HostFlagPanel country="CANADA" flagImage={canadaFlag} />
+                    </motion.div>
+
+                    {/* USA (Top Center - Largest) */}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.8 }}
+                        style={{ gridColumn: '2', gridRow: '1 / span 2', zIndex: 2 }}
+                    >
+                        <div style={{ transform: 'scale(1.2)' }}>
+                            <HostFlagPanel country="USA" flagImage={usaFlag} />
                         </div>
-                    </div>
+                    </motion.div>
+
+                    {/* Mexico (Bottom Right) */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 50 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, delay: 0.3 }}
+                        style={{ gridColumn: '3', gridRow: '2', marginTop: '-4rem' }}
+                    >
+                        <HostFlagPanel country="MEXICO" flagImage={mexicoFlag} />
+                    </motion.div>
+
                 </div>
 
-                {/* 4. & 5. STADIUMS BLOCK */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
-                    <div>
-                        <motion.h3
-                            initial={{ opacity: 0, y: 12 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true, amount: 0.6 }}
-                            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                            style={{
-                                fontFamily: 'var(--font-display)',
-                                fontSize: 'clamp(2rem, 3vw, 2.5rem)',
-                                fontWeight: 700,
-                                textTransform: 'uppercase',
-                                color: '#ffffff', // Light text
-                                marginBottom: '0.5rem',
-                                letterSpacing: '-0.02em'
-                            }}
-                            id="stadiums-heading"
-                        >
+
+                {/* 3. STADIUMS SECTION */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4rem' }}>
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8 }}
+                    >
+                        <h3 style={{
+                            fontFamily: 'var(--font-display)',
+                            fontSize: 'clamp(2.5rem, 4vw, 3.5rem)',
+                            fontWeight: 900,
+                            textTransform: 'uppercase',
+                            color: '#000',
+                            marginBottom: '0',
+                            letterSpacing: '-0.03em',
+                            lineHeight: 0.9
+                        }}>
                             THE STAGES
-                        </motion.h3>
-                        <motion.p
-                            initial={{ opacity: 0, y: 12 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true, amount: 0.6 }}
-                            transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-                            style={{
-                                fontFamily: 'var(--font-display)',
-                                fontSize: '0.875rem',
-                                fontWeight: 500,
-                                letterSpacing: '0.1em',
-                                textTransform: 'uppercase',
-                                color: '#999' // Light grey
-                            }}
-                            aria-labelledby="stadiums-heading"
-                        >
-                            16 STADIUMS ACROSS NORTH AMERICA
-                        </motion.p>
-                    </div>
+                        </h3>
+                        <p style={{
+                            fontFamily: 'var(--font-body)',
+                            fontSize: '1rem',
+                            fontWeight: 500,
+                            color: '#666',
+                            marginTop: '0.5rem'
+                        }}>
+                            16 Stadiums Across North America
+                        </p>
+                    </motion.div>
 
                     {/* Timeline Container */}
                     <div
                         ref={scrollContainerRef}
                         className="stadium-timeline"
-                        onMouseDown={() => setIsDragging(true)}
-                        onMouseUp={() => setIsDragging(false)}
-                        onMouseLeave={() => setIsDragging(false)}
+                        onMouseDown={handleMouseDown}
+                        onMouseUp={handleMouseUp}
+                        onMouseLeave={handleMouseLeave}
+                        onMouseMove={handleMouseMove}
                         style={{
                             display: 'flex',
-                            gap: '2rem',
+                            gap: '3rem',
                             overflowX: 'auto',
-                            paddingBottom: '2rem',
+                            paddingBottom: '3rem',
+                            paddingLeft: '2rem', // Optical start
                             width: '100%',
                             cursor: isDragging ? 'grabbing' : 'grab',
                             scrollbarWidth: 'none',
