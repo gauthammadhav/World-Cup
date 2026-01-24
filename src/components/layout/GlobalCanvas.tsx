@@ -1,8 +1,8 @@
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import { motion, useScroll, useTransform, useSpring, useMotionValue } from 'framer-motion';
 import { HeroBackground } from '../../features/hero/components/HeroBackground';
 import { NorthAmericaMap } from '../visuals/NorthAmericaMap';
 import ballImg from '../../assets/images/FIFA_World_Cup_26tm_Trionda_Pro_Ball_White_JD8021_HM1-removebg-preview(1)(1).png';
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -17,6 +17,24 @@ interface GlobalCanvasProps {
 export function GlobalCanvas({ children }: GlobalCanvasProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const { scrollY } = useScroll();
+
+    // Mouse Tracking for Interactive Background
+    const mouseX = useMotionValue(0);
+    const mouseY = useMotionValue(0);
+
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            // Normalize mouse position from -1 to 1
+            const { innerWidth, innerHeight } = window;
+            const x = (e.clientX / innerWidth) * 2 - 1;
+            const y = (e.clientY / innerHeight) * 2 - 1;
+            mouseX.set(x);
+            mouseY.set(y);
+        };
+
+        window.addEventListener('mousemove', handleMouseMove);
+        return () => window.removeEventListener('mousemove', handleMouseMove);
+    }, [mouseX, mouseY]);
 
     // --- CONTINUOUS BALL ANIMATION ---
     // Hero Phase -> Atmosphere Phase
@@ -82,7 +100,7 @@ export function GlobalCanvas({ children }: GlobalCanvasProps) {
                 pointerEvents: 'none'
             }}>
                 {/* Hexagons / Field Lines */}
-                <HeroBackground />
+                <HeroBackground mouseX={mouseX} mouseY={mouseY} />
             </div>
 
             {/* --- LAYER 1: GLOBAL VISUALS (Cinema Layer) --- */}
