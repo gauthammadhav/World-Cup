@@ -1,11 +1,18 @@
-import { motion, MotionValue, useSpring, useTransform } from 'framer-motion';
+import { motion, MotionValue, useSpring, useTransform, useMotionValue } from 'framer-motion';
 
 interface HeroBackgroundProps {
-    mouseX: MotionValue<number>;
-    mouseY: MotionValue<number>;
+    mouseX?: MotionValue<number>;
+    mouseY?: MotionValue<number>;
 }
 
 export function HeroBackground({ mouseX, mouseY }: HeroBackgroundProps) {
+    // Fallback motion values if not provided
+    const defaultX = useMotionValue(0);
+    const defaultY = useMotionValue(0);
+
+    const safeMouseX = mouseX || defaultX;
+    const safeMouseY = mouseY || defaultY;
+
     // Grid Configuration
     const hexSize = 40; // Radius of a hexagon
     const hexHeight = hexSize * 2;
@@ -60,8 +67,8 @@ export function HeroBackground({ mouseX, mouseY }: HeroBackgroundProps) {
                         x={hex.x}
                         y={hex.y}
                         size={hexSize}
-                        mouseX={mouseX}
-                        mouseY={mouseY}
+                        mouseX={safeMouseX}
+                        mouseY={safeMouseY}
                         row={hex.row}
                         col={hex.col}
                     />
