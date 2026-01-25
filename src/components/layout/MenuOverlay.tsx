@@ -82,6 +82,17 @@ export function MenuOverlay({ isOpen, onClose }: MenuOverlayProps) {
         return () => window.removeEventListener('keydown', handleEsc);
     }, [isOpen, onClose]);
 
+    const handleItemClick = (item: string) => {
+        if (item === "Atmosphere") {
+            const section = document.getElementById('atmosphere');
+            if (section) {
+                // Use lenis or native smooth scroll
+                section.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+        onClose();
+    };
+
     return (
         <AnimatePresence>
             {isOpen && (
@@ -136,6 +147,7 @@ export function MenuOverlay({ isOpen, onClose }: MenuOverlayProps) {
                                     key={item}
                                     variants={itemVariants}
                                     whileHover={{ x: 10, color: '#e5e5e5' }}
+                                    onClick={() => handleItemClick(item)}
                                     style={{
                                         fontFamily: 'var(--font-display)',
                                         fontSize: 'clamp(3rem, 5vw, 5.5rem)',
