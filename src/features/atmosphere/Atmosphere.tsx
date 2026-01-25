@@ -13,16 +13,9 @@ import mexicoFlag from '../../assets/images/mexico-flag.jpg';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const stadiums = [
-    { id: 1, name: "Azteca Stadium", location: "Mexico City, Mexico", glow: "rgba(0,166,80,0.8)" }, // Mexico Green
-    { id: 2, name: "MetLife Stadium", location: "New York/New Jersey, USA", glow: "rgba(50,100,255,0.8)" }, // USA Blue
-    { id: 3, name: "AT&T Stadium", location: "Dallas, USA", glow: "rgba(50,100,255,0.8)" },
-    { id: 4, name: "Arrowhead Stadium", location: "Kansas City, USA", glow: "rgba(50,100,255,0.8)" },
-    { id: 5, name: "BC Place", location: "Vancouver, Canada", glow: "rgba(255,50,50,0.8)" }, // Canada Red
-    { id: 6, name: "BMO Field", location: "Toronto, Canada", glow: "rgba(255,50,50,0.8)" },
-    { id: 7, name: "SoFi Stadium", location: "Los Angeles, USA", glow: "rgba(50,100,255,0.8)" },
-    { id: 8, name: "Mercedes-Benz Stadium", location: "Atlanta, USA", glow: "rgba(50,100,255,0.8)" },
-];
+import { stadiums } from '../../data/stadiums';
+
+// ... imports remain the same, just removing the local array and updating the map usage
 
 export function Atmosphere() {
     const containerRef = useRef<HTMLElement>(null);
@@ -30,10 +23,8 @@ export function Atmosphere() {
     const mapRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-    // Horizontal Drag State
-    const [isDragging, setIsDragging] = useState(false);
-    const [startX, setStartX] = useState(0);
-    const [scrollLeft, setScrollLeft] = useState(0);
+    // Removed manual Drag State as we now use ScrollTrigger Pinning 
+
 
     useGSAP(() => {
         const tl = gsap.timeline({
@@ -66,31 +57,87 @@ export function Atmosphere() {
             }
         );
 
-    }, { scope: containerRef });
-
-    // Drag Logic
-    const handleMouseDown = (e: React.MouseEvent) => {
-        if (!scrollContainerRef.current) return;
-        setIsDragging(true);
-        setStartX(e.pageX - scrollContainerRef.current.offsetLeft);
-        setScrollLeft(scrollContainerRef.current.scrollLeft);
-    };
-
-    const handleMouseLeave = () => { setIsDragging(false); };
-    const handleMouseUp = () => { setIsDragging(false); };
-    const handleMouseMove = (e: React.MouseEvent) => {
-        if (!isDragging || !scrollContainerRef.current) return;
-        e.preventDefault();
-        const x = e.pageX - scrollContainerRef.current.offsetLeft;
-        const walk = (x - startX) * 2;
-        scrollContainerRef.current.scrollLeft = scrollLeft - walk;
-    };
-
-    const handleWheel = (e: React.WheelEvent) => {
+        // --- STAGES HORIZONTAL SCROLL ---
         if (scrollContainerRef.current) {
-            scrollContainerRef.current.scrollLeft += e.deltaY;
+            const track = scrollContainerRef.current.querySelector('.stadium-track') as HTMLElement;
+            const cards = gsap.utils.toArray('.stadium-card') as HTMLElement[];
+
+            // Calculate total scroll distance: Width of track - Window Width
+            // But since we center the first and last items using padding, the movement is simple subtraction
+            // We want to move until the last item is in center. 
+            // Better: use function for dynamic width
+
+            const getScrollAmount = () => {
+                let trackWidth = track.scrollWidth;
+                return -(trackWidth - window.innerWidth);
+            };
+
+            const scrollTween = gsap.to(track, {
+                x: getScrollAmount,
+                ease: "none",
+                scrollTrigger: {
+                    trigger: scrollContainerRef.current,
+                    start: "top top", // Pin when section hits top
+                    end: "+=3000", // Scroll duration (adjust for speed)
+                    pin: true,
+                    scrub: 1,
+                    invalidateOnRefresh: true,
+                    onUpdate: (self) => {
+                        // Update Progress Bar
+                        gsap.set(".stages-progress-bar", { scaleX: self.progress });
+
+                        // Focus Logic
+                        // Find center point of viewport
+                        const centerPoint = window.innerWidth / 2;
+
+                        cards.forEach((card) => {
+                            const rect = card.getBoundingClientRect();
+                            const cardCenter = rect.left + rect.width / 2;
+                            const distFromCenter = Math.abs(centerPoint - cardCenter);
+
+                            // Calculate normalized distance (0 = center, 1 = far)
+                            // "zone" is roughly 500px wide
+                            const normalize = gsap.utils.clamp(0, 1, distFromCenter / (window.innerWidth * 0.4));
+                            const inverse = 1 - normalize;
+
+                            // Animate Card Properties based on proximity
+                            gsap.to(card, {
+                                scale: 1 + (0.08 * inverse), // Reduced scale (1.08x max)
+                                opacity: 0.3 + (0.7 * inverse), // Fade out to 0.3
+                                filter: `blur(${3 * normalize}px) grayscale(${100 * normalize}%)`, // Blur and grayscale edges
+                                zIndex: Math.round(100 * inverse), // Ensure center is on top
+                                duration: 0.2,
+                                overwrite: 'auto'
+                            });
+
+                            // Inner Parallax (Image moves opposite to card)
+                            // Movement range +/- 50px
+                            const parallaxX = (cardCenter - centerPoint) * 0.1;
+                            const image = card.querySelector('.stadium-image');
+                            if (image) {
+                                gsap.set(image, { x: parallaxX });
+                            }
+
+                            // Text Reveal
+                            const info = card.querySelector('.stadium-info');
+                            const accent = card.querySelector('.stadium-accent');
+
+                            if (info && accent) {
+                                if (inverse > 0.8) { // If very close to center
+                                    gsap.to(info, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" });
+                                    gsap.to(accent, { width: '100%', duration: 0.6, ease: "power2.out" });
+                                } else {
+                                    gsap.to(info, { opacity: 0, y: 20, duration: 0.4 });
+                                    gsap.to(accent, { width: '0%', duration: 0.4 });
+                                }
+                            }
+                        });
+                    }
+                }
+            });
         }
-    }
+
+    }, { scope: containerRef });
 
     return (
         <section
@@ -203,49 +250,100 @@ export function Atmosphere() {
                     </motion.div>
                 </div>
 
-                {/* 3. Stadium Timeline (The Stages) */}
-                <div style={{ position: 'relative', marginTop: '4rem' }}>
-                    <div style={{ marginBottom: '2rem', paddingLeft: '1rem' }}>
-                        <h3 style={{
+                {/* 3. Stadium Timeline (The Stages) - Horizontal Scroll Section */}
+                {/* 
+                  NOTE: This section breaks out of the standard flow to become a rigid, 
+                  pinned horizontal experience. We need a wrapper to hold the pin.
+                */}
+            </div> {/* Close content container temporarily to allow full bleed track if needed, or keep inside */}
+
+            <div
+                ref={scrollContainerRef}
+                className="stages-pin-container"
+                style={{
+                    height: '100vh',
+                    width: '100%',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    display: 'flex',
+                    alignItems: 'center',
+                    marginTop: '15vh'
+                }}
+            >
+                {/* The Sliding Track */}
+                <div
+                    className="stadium-track"
+                    style={{
+                        display: 'flex',
+                        paddingLeft: '27.5vw', // Center first item
+                        paddingRight: '27.5vw', // Center last item (Required for focus to work)
+                        gap: '0',
+                        willChange: 'transform'
+                    }}
+                >
+                    {/* Intro Title Card */}
+                    <div style={{
+                        flexShrink: 0,
+                        width: '45vw', // Same as cards for rhythm
+                        maxWidth: '800px',
+                        aspectRatio: '16/9',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: '5vw'
+                    }}>
+                        <h2 style={{
                             fontFamily: 'var(--font-display)',
-                            fontSize: 'clamp(2rem, 4vw, 3rem)',
-                            fontWeight: 700,
-                            textTransform: 'uppercase',
-                            margin: 0
-                        }}>The Stages</h3>
-                        <div style={{ width: '40px', height: '4px', background: '#000', marginTop: '0.5rem' }} />
+                            fontSize: 'clamp(3rem, 8vw, 6rem)',
+                            fontWeight: 900,
+                            color: '#111', // Clear and visible
+                            margin: 0,
+                            textAlign: 'center',
+                            lineHeight: 0.9,
+                            textTransform: 'uppercase'
+                        }}>
+                            The<br />Stages
+                        </h2>
                     </div>
 
-                    <div
-                        ref={scrollContainerRef}
-                        onMouseDown={handleMouseDown}
-                        onMouseUp={handleMouseUp}
-                        onMouseLeave={handleMouseLeave}
-                        onMouseMove={handleMouseMove}
-                        onWheel={handleWheel}
-                        className="stadium-timeline"
-                        style={{
-                            display: 'flex',
-                            gap: '2rem',
-                            overflowX: 'auto',
-                            padding: '2rem 1rem',
-                            cursor: isDragging ? 'grabbing' : 'grab',
-                            scrollbarWidth: 'none',
-                            msOverflowStyle: 'none',
-                        }}
-                    >
-                        {stadiums.map((stadium) => (
-                            <StadiumCard
-                                key={stadium.id}
-                                name={stadium.name}
-                                location={stadium.location}
-                                glowColor={stadium.glow}
-                            />
-                        ))}
-                        {/* Buffer for scroll end */}
-                        <div style={{ width: '100px', flexShrink: 0 }} />
-                    </div>
+                    {stadiums.map((stadium) => (
+                        <StadiumCard
+                            key={stadium.id}
+                            name={stadium.name}
+                            location={stadium.city + ", " + stadium.country}
+                            image={stadium.image}
+                            glowColor={stadium.glow}
+                        />
+                    ))}
                 </div>
+
+                {/* Progress Bar / Indicator (Optional, polished touch) */}
+                <div className="stages-progress" style={{
+                    position: 'absolute',
+                    bottom: '15vh', // Moved up slightly
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: '200px',
+                    height: '2px',
+                    background: 'rgba(0,0,0,0.1)',
+                    overflow: 'hidden',
+                    borderRadius: '2px'
+                }}>
+                    <div className="stages-progress-bar" style={{
+                        width: '100%',
+                        height: '100%',
+                        background: '#000', // or accent color
+                        transformOrigin: 'left',
+                        transform: 'scaleX(0)'
+                    }} />
+                </div>
+            </div>
+
+            {/* Resume normal flow if needed, but for now we end here or add footer later */}
+            <div>
+                {/* Empty div to balance the closing tag removed above if proceeding content existed, 
+                    but Atmosphere ends here usually. 
+                */}
 
             </div>
 

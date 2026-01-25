@@ -1,103 +1,115 @@
-import { motion } from 'framer-motion';
+import { forwardRef } from 'react';
 
 interface StadiumCardProps {
     name: string;
     location: string;
+    image: string;
     glowColor?: string; // Hex or rgba
 }
 
-export function StadiumCard({ name, location, glowColor = 'rgba(255,255,255,0.5)' }: StadiumCardProps) {
+export const StadiumCard = forwardRef<HTMLDivElement, StadiumCardProps>(({ name, location, image, glowColor = 'rgba(255,255,255,0.5)' }, ref) => {
     return (
-        <motion.div
-            className="stadium-card" // Class for parent selection if needed
-            initial="hidden"
-            whileInView="visible"
-            variants={{
-                hidden: { opacity: 0, scale: 0.9 },
-                visible: {
-                    opacity: 1,
-                    scale: 1,
-                    transition: { duration: 0.6, ease: "easeOut" }
-                }
-            }}
+        <div
+            ref={ref}
+            className="stadium-card"
             style={{
                 flexShrink: 0,
-                width: '400px', // Wider cinematic feel
+                width: '45vw', // Reduced from 60vw
+                maxWidth: '800px', // Reduced from 1000px
+                aspectRatio: '16/9',
                 position: 'relative',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'flex-end',
-                cursor: 'grab'
+                padding: '2rem',
+                marginRight: '5vw', // Spacing between cards
+                willChange: 'transform, opacity, filter' // optimize for GSAP
             }}
         >
-            {/* Image Container */}
-            <motion.div
+            {/* Image Container (Parallax Mask) */}
+            <div
+                className="stadium-image-container"
                 style={{
-                    width: '100%',
-                    aspectRatio: '16/9',
-                    position: 'relative',
+                    position: 'absolute',
+                    inset: 0,
+                    borderRadius: '12px', // Premium feel
                     overflow: 'hidden',
-                    boxShadow: `0 0 40px ${glowColor.replace('1)', '0.2').replace(')', ', 0.2)')}`, // Soft ambient glow
+                    backgroundColor: '#111',
+                    boxShadow: `0 20px 50px -10px ${glowColor.replace('1)', '0.3').replace(')', ', 0.3)')}`, // Deep cinematic shadow
+                    zIndex: 0
                 }}
             >
-                {/* Placeholder / Image */}
+                {/* The Image (Target for Parallax) */}
+                <img
+                    className="stadium-image"
+                    src={image}
+                    alt={name}
+                    style={{
+                        width: '120%', // Wider for parallax movement
+                        height: '120%', // Taller for parallax movement
+                        objectFit: 'cover',
+                        position: 'absolute',
+                        top: '-10%',
+                        left: '-10%',
+                        filter: 'brightness(0.8) contrast(1.1)', // Cinematic base look
+                    }}
+                />
+
+                {/* Vignette Overlay */}
                 <div style={{
-                    width: '100%',
-                    height: '100%',
-                    background: '#222', // Dark placeholder
-                    position: 'relative'
-                }}>
-                    <div style={{
-                        position: 'absolute',
-                        inset: 0,
-                        background: 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.8) 100%)', // Vignette for text
-                        zIndex: 2
-                    }} />
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.9) 100%)',
+                    zIndex: 1
+                }} />
 
-                    {/* Bloom/Glow Highlight */}
-                    <div style={{
-                        position: 'absolute',
-                        top: '-50%',
-                        left: '-50%',
-                        width: '200%',
-                        height: '200%',
-                        background: `radial-gradient(circle, ${glowColor} 0%, transparent 70%)`,
-                        opacity: 0.1,
-                        zIndex: 1,
-                        pointerEvents: 'none'
-                    }} />
-                </div>
-            </motion.div>
+                {/* Color Tint/Glow Overlay */}
+                <div style={{
+                    position: 'absolute',
+                    inset: 0,
+                    background: `linear-gradient(to top, ${glowColor} 0%, transparent 40%)`,
+                    opacity: 0.2,
+                    zIndex: 2,
+                    mixBlendMode: 'overlay'
+                }} />
+            </div>
 
-            {/* Info Overlay (Cinematic: Floating at bottom or just below) */}
-            <div style={{
-                marginTop: '1rem',
-                paddingLeft: '0.5rem',
-                borderLeft: `2px solid ${glowColor}`
-            }}>
-                <h4 style={{
+            {/* Info Content (Layers above image) */}
+            <div className="stadium-info" style={{ position: 'relative', zIndex: 10, transform: 'translateY(20px)', opacity: 0 }}>
+                {/* Accent Line */}
+                <div className="stadium-accent" style={{
+                    width: '0%',
+                    height: '4px',
+                    background: glowColor,
+                    marginBottom: '1rem',
+                    boxShadow: `0 0 10px ${glowColor}`
+                }} />
+
+                <h3 className="stadium-name" style={{
                     fontFamily: 'var(--font-display)',
-                    fontWeight: 700,
-                    fontSize: '1.5rem',
+                    fontWeight: 800,
+                    fontSize: 'clamp(2rem, 5vw, 4rem)',
                     textTransform: 'uppercase',
-                    color: '#111', // Or white if dark mode
+                    color: '#fff',
                     margin: 0,
-                    lineHeight: 1
+                    lineHeight: 0.9,
+                    textShadow: '0 4px 20px rgba(0,0,0,0.5)'
                 }}>
                     {name}
-                </h4>
-                <p style={{
+                </h3>
+
+                <p className="stadium-location" style={{
                     fontFamily: 'var(--font-display)',
-                    fontWeight: 400,
-                    fontSize: '1rem',
+                    fontWeight: 500,
+                    fontSize: 'clamp(1rem, 1.5vw, 1.5rem)',
                     textTransform: 'uppercase',
-                    color: '#666',
-                    margin: '0.25rem 0 0 0',
-                    letterSpacing: '0.05em'
+                    color: 'rgba(255,255,255,0.7)',
+                    margin: '0.5rem 0 0 0',
+                    letterSpacing: '0.1em'
                 }}>
                     {location}
                 </p>
             </div>
-        </motion.div>
+        </div>
     );
-}
+});
