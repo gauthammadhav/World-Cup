@@ -89,20 +89,8 @@ export function HostFlagPanel({ country, flagImage }: HostFlagPanelProps) {
                     fontFamily: 'var(--font-display)',
                     fontSize: 'clamp(1.5rem, 2vw, 2.5rem)',
                     fontWeight: 800,
-                    color: '#fff', // Assuming dark bg context now, or we force dark text if on light. Request said "Atmosphere text fades out... Hero text...". 
-                    // Wait, user request said "Atmosphere must feel like a continuation of the Hero section." and "Do NOT use grey backgrounds".
-                    // Hero is usually dark/green. Atmosphere title reveal "TranslateY 16px -> 0".
-                    // Let's stick to standard text color but allowing parent to control or default to cinematic white/black.
-                    // Given the "Cinematic" instructions and "World Cup universe", usually implies dark/rich. 
-                    // However, previous convo had white bg.
-                    // User Request: "Do NOT use grey backgrounds". "Atmosphere must feel like a continuation of the Hero section."
-                    // If Hero is dark, Atmosphere should likely be dark or a seamless transition.
-                    // I will set color to 'currentColor' to let parent control, or default to a safe cinematic dark/light.
-                    // Let's use a dynamic color or just white/black based on assumed background.
-                    // I will use 'var(--text-primary)' but force uppercase and bold.
-                    // Actually, for cinematic impact on a map/field background, White is usually best.
-                    // If the background is "continuation of Hero" (Green/Dark), text should be White.
-                    color: '#000', // Reverting to black as per previous Atmos code, but maybe needs check.
+
+                    color: '#000',
                     // User said: "Atmosphere text fades out simultaneously." -> "Both Hero and Atmosphere text must overlap".
                     // I will assume for now text is Dark or High Contrast. Let's use 'inherit' or explicit styling in parent.
                     // I'll stick to a high contrast color and simple styling here.
